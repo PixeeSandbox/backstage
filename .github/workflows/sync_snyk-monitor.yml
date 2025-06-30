@@ -5,14 +5,17 @@ on:
     branches: [master]
     paths:
       - '.github/workflows/sync_snyk-monitor.yml'
-      - '**/.snyk'
-      - '**/package.json'
-      - 'yarn.lock'
+      - '**/*.js'
+      - '**/*.ts'
+      - '**/*.jsx'
+      - '**/*.tsx'
+      - '**/*.py'
+      - '**/*.java'
+      - '**/*.go'
 
-# This workflow synchronizes the packages in this repo along with policies in
-# each .snyk file with the remote state in our snyk org. It allows us to define
-# ignore policies in the .snyk files and then have them show up in the snyk web
-# UI, and also automatically adds any new packages that are created.
+# This workflow runs Snyk Code (SAST) analysis and uploads results to GitHub
+# Advanced Security. It focuses on static code analysis rather than dependency
+# scanning to reduce SARIF file complexity and stay within GHAS limits.
 
 permissions:
   contents: read
@@ -30,34 +33,21 @@ jobs:
           egress-policy: audit
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Monitor and Synchronize Snyk Policies
-        uses: snyk/actions/node@cdb760004ba9ea4d525f2e043745dfe85bb9077e # master
-        with:
-          command: monitor
-          args: >
-            --yarn-workspaces
-            --org=backstage-dgh
-            --strict-out-of-sync=false
-            --remote-repo-url=https://github.com/backstage/backstage
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          NODE_OPTIONS: --max-old-space-size=7168
+      # Removed monitor step - focusing only on code analysis
 
-      # Above we run the `monitor` command, this runs the `test` command which is
-      # the one that generates the SARIF report that we can upload to GitHub.
-      - name: Create Snyk report
+      # Run Snyk Code (SAST) analysis and generate SARIF report
+      - name: Create Snyk Code report
         uses: snyk/actions/node@cdb760004ba9ea4d525f2e043745dfe85bb9077e # master
         continue-on-error: true # To make sure that SARIF upload gets called
         with:
+          command: code test
           args: >
-            --yarn-workspaces
             --org=backstage-dgh
-            --strict-out-of-sync=false
             --sarif-file-output=snyk.sarif
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
           NODE_OPTIONS: --max-old-space-size=7168
-      - name: Upload Snyk report
+      - name: Upload Snyk Code report to GHAS
         uses: github/codeql-action/upload-sarif@60168efe1c415ce0f5521ea06d5c2062adbeed1b # v3.28.17
         with:
           sarif_file: snyk.sarif
