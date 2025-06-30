@@ -42,7 +42,7 @@ jobs:
         with:
           command: code test
           args: >
-            --org=backstage-dgh
+            --org=pixee-default
             --sarif-file-output=snyk.sarif
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
