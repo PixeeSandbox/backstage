@@ -1,0 +1,62 @@
+name: CodeQL Security Analysis
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/codeql-analysis.yml'
+      - '**/*.js'
+      - '**/*.ts'
+      - '**/*.jsx'
+      - '**/*.tsx'
+      - '**/*.py'
+      - '**/*.java'
+      - '**/*.go'
+
+# This workflow runs GitHub CodeQL security analysis and uploads results to GitHub
+# Advanced Security. It complements Snyk Code analysis by providing GitHub's native
+# SAST scanning capabilities for comprehensive security coverage.
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # for github/codeql-action/init to get workflow details
+    runs-on: ubuntu-latest
+    name: Analyze (${{ matrix.language }})
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['javascript', 'python', 'java', 'go']
+    
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      # Initialize CodeQL tools for scanning
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@60168efe1c415ce0f5521ea06d5c2062adbeed1b # v3.28.17
+        with:
+          languages: ${{ matrix.language }}
+          # Enable security-and-quality query suite for comprehensive analysis
+          queries: security-and-quality
+        
+      # Autobuild for JavaScript/TypeScript, Python, and other interpreted languages
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@60168efe1c415ce0f5521ea06d5c2062adbeed1b # v3.28.17
+
+      # Perform CodeQL analysis and automatically upload to GHAS
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@60168efe1c415ce0f5521ea06d5c2062adbeed1b # v3.28.17
+        with:
+          category: "/language:${{ matrix.language }}"

@@ -6,16 +6,7 @@
 name: Verify CodeQL
 
 on:
-  push:
-    branches: [master]
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [master]
-    # https://docs.github.com/en/free-pro-team@latest/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#scanning-pull-requests
-    paths-ignore:
-      - '**/*.md'
-      - '**/*.yml'
-      - '**/*.yaml'
+  workflow_dispatch:
   schedule:
     - cron: '0 8 * * 6'
 
