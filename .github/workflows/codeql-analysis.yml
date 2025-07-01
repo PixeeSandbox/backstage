@@ -32,7 +32,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['javascript', 'python', 'java', 'go']
+        # Only analyze languages that actually exist in this repository
+        language: ['javascript']
     
     steps:
       - name: Harden Runner
